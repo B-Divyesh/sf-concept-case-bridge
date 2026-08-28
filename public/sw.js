@@ -1,4 +1,4 @@
-const CACHE = 'ccb-shell-v1';
+const CACHE = 'ccb-shell-v2';
 const SHELL = ['/', '/index.html', '/offline.html', '/manifest.webmanifest', '/assets/app.js', '/assets/app.css', '/assets/bridge-workbench.webp', '/assets/bridge-workbench-720.webp', '/icons/icon-192.png', '/icons/icon-512.png'];
 
 self.addEventListener('install', (event) => {
@@ -20,10 +20,10 @@ self.addEventListener('fetch', (event) => {
       const copy = response.clone();
       caches.open(CACHE).then((cache) => cache.put(request, copy));
       return response;
-    }).catch(async () => (await caches.match(request)) || (await caches.match('/index.html')) || caches.match('/offline.html')));
+    }).catch(async () => (await caches.match(request, { ignoreSearch: true, ignoreVary: true })) || (await caches.match('/index.html', { ignoreVary: true })) || caches.match('/offline.html', { ignoreVary: true })));
     return;
   }
-  event.respondWith(caches.match(request).then((cached) => cached || fetch(request).then((response) => {
+  event.respondWith(caches.match(request, { ignoreSearch: true, ignoreVary: true }).then((cached) => cached || fetch(request).then((response) => {
     if (response.ok) caches.open(CACHE).then((cache) => cache.put(request, response.clone()));
     return response;
   })));

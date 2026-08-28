@@ -33,7 +33,7 @@ export function initialLicenseState(): LicenseState {
   const verdict = readVerdict();
   return {
     token,
-    unlocked: Boolean(token && verdict?.valid !== false),
+    unlocked: Boolean(token && verdict?.valid === true),
     checking: Boolean(token),
     notice: ''
   };
@@ -59,6 +59,6 @@ export async function verifyLicense(force = false): Promise<LicenseState> {
     localStorage.setItem(VERDICT_KEY, JSON.stringify({ valid, checkedAt: Date.now() }));
     return { token, unlocked: valid, checking: false, notice: valid ? '' : 'License no longer active.' };
   } catch {
-    return { token, unlocked: cached?.valid ?? true, checking: false, notice: 'Could not recheck the license. Your last local unlock is still in use.' };
+    return { token, unlocked: cached?.valid ?? false, checking: false, notice: cached?.valid ? 'Could not recheck the license. Your last local unlock is still in use.' : 'Could not verify this license. Reconnect and try again.' };
   }
 }

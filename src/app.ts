@@ -128,6 +128,8 @@ class BridgeApp {
     else if (this.view === 'license') content = this.licenseView();
     else content = this.libraryView();
     appRoot.innerHTML = this.shell(content);
+    appRoot.removeAttribute('data-loading');
+    document.querySelector('#boot-loader')?.remove();
   }
 
   private libraryView(): string {
@@ -391,6 +393,8 @@ class BridgeApp {
 
   private renderFatal(message: string): void {
     appRoot.innerHTML = `<header class="site-header"><div class="masthead"><div class="title-lockup"><p class="eyebrow">Local decision practice</p><h1>Concept Case <em>Bridge</em></h1></div></div></header><main id="main"><section class="fatal-state" role="alert"><p class="stamp stamp-coral">Casebook unavailable</p><h2>We couldn’t open your local work.</h2><p>${html(message)}</p><button class="button primary" type="button" onclick="location.reload()">Try again</button></section></main>`;
+    appRoot.removeAttribute('data-loading');
+    document.querySelector('#boot-loader')?.remove();
   }
 }
 

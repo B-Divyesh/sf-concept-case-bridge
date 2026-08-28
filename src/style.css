@@ -26,6 +26,7 @@
 html { scroll-behavior: smooth; background: var(--paper); }
 
 body {
+  display: flow-root;
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
@@ -36,6 +37,9 @@ body {
   font: 400 16px/1.55 var(--sans);
   text-rendering: optimizeLegibility;
 }
+
+#app[data-loading] { opacity: 0; pointer-events: none; }
+.boot-loader { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 24px; background: var(--paper); color: var(--ink); font-weight: 780; }
 
 button, input, textarea { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
@@ -292,7 +296,7 @@ main:focus { outline: 0; }
   background: var(--paper-high);
   box-shadow: 8px 8px 0 var(--coral);
 }
-.empty-number { color: var(--teal); font: 700 clamp(6rem, 17vw, 12rem)/.8 var(--serif); opacity: .28; }
+.empty-number { color: var(--teal-dark); font: 700 clamp(6rem, 17vw, 12rem)/.8 var(--serif); }
 .empty-state p:not(.eyebrow) { max-width: 64ch; color: var(--ink-soft); }
 
 .tools-panel {
