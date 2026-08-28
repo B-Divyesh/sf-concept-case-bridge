@@ -1,0 +1,10 @@
+{
+  "slug": "concept-case-bridge",
+  "title": "Concept Case Bridge",
+  "artifact_class": "pwa-offline",
+  "user": "Professionals learning both a technical stack and an unfamiliar business domain who need to practice choosing the right concept in a realistic domain case.",
+  "smallest_useful_product": "Local case-card editor: author a compact scenario, tag the technical concept and domain signal, hide the decision, and review with a 'why not the alternative?' field.",
+  "success_measure": "Pilot users create 15+ concept-case links and correctly choose the intended concept in 75% of delayed case checks after two weeks.",
+  "monetization": "one-time",
+  "constraints": "Do not include employer-confidential facts in templates; local-only default; authored cases need clear attribution/export."
+}
