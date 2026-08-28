@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">Concept Case Bridge mark</title>
+  <rect width="512" height="512" rx="80" fill="#f4ebd8"/>
+  <path d="M54 142h142v228H54z" fill="#087f73"/>
+  <path d="M316 142h142v228H316z" fill="#d65345"/>
+  <path d="M146 224h220v74H146z" fill="#fff9ec" stroke="#172521" stroke-width="16"/>
+  <path d="m78 186 74-28v58zm356 0-74-28v58z" fill="#d6a824"/>
+  <circle cx="256" cy="261" r="27" fill="#172521"/>
+</svg>
