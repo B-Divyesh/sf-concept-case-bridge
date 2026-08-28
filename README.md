@@ -28,7 +28,7 @@ personal, or regulated facts into cases.
 Requirements: Node.js 20+ and npm.
 
 ```sh
-npm install
+npm ci
 npm run dev
 ```
 
@@ -39,6 +39,7 @@ experience.
 
 ```sh
 npm test
+npm run lint
 npm run build
 npm run preview
 ```
@@ -68,8 +69,9 @@ one-time price.
 
 The site makes no analytics or font/CDN requests. The only optional third-party
 runtime request is license checkout/verification initiated by a purchaser. Static
-files in `dist/` can be deployed as-is; configure immutable caching for assets and
-no-cache revalidation for `sw.js` so PWA updates are discovered promptly.
+files in `dist/` can be deployed as-is. The included Azure Static Web Apps
+configuration assigns immutable caching to hashed assets and no-cache revalidation
+to `sw.js` so PWA updates are discovered promptly.
 
 See [the visual thesis](.factory/design.md), [privacy policy](public/privacy/index.html),
 and [terms](public/terms/index.html).

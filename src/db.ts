@@ -1,4 +1,5 @@
 import type { BridgeBackup, CaseCard, ReviewRecord } from './types';
+import { validateBackup, validateCaseCard } from './domain';
 
 const DB_NAME = 'concept-case-bridge';
 const DB_VERSION = 1;
@@ -40,6 +41,46 @@ export async function getAllReviews(): Promise<ReviewRecord[]> {
   return items.sort((a, b) => b.reviewedAt.localeCompare(a.reviewedAt));
 }
 
+export async function recoverCasebook(): Promise<{ cases: CaseCard[]; reviews: ReviewRecord[]; discarded: number }> {
+  const db = await openDatabase();
+  const transaction = db.transaction(['cases', 'reviews'], 'readwrite');
+  const casesStore = transaction.objectStore('cases');
+  const reviewsStore = transaction.objectStore('reviews');
+  const storedCases = await requestResult(casesStore.getAll()) as CaseCard[];
+  const validCases: CaseCard[] = [];
+  let discarded = 0;
+  for (const card of storedCases) {
+    try {
+      validateCaseCard(card);
+      validCases.push(card);
+    } catch {
+      casesStore.delete(card.id);
+      discarded += 1;
+    }
+  }
+  const storedReviews = await requestResult(reviewsStore.getAll()) as ReviewRecord[];
+  const validReviews: ReviewRecord[] = [];
+  for (const review of storedReviews) {
+    try {
+      validateBackup({ format: 'concept-case-bridge', version: 1, exportedAt: new Date().toISOString(), cases: validCases, reviews: [review] });
+      validReviews.push(review);
+    } catch {
+      reviewsStore.delete(review.id);
+      discarded += 1;
+    }
+  }
+  await new Promise<void>((resolve, reject) => {
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error ?? new Error('Could not recover the local casebook.'));
+  });
+  db.close();
+  return {
+    cases: validCases.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
+    reviews: validReviews.sort((a, b) => b.reviewedAt.localeCompare(a.reviewedAt)),
+    discarded
+  };
+}
+
 export async function saveCase(card: CaseCard): Promise<void> {
   const db = await openDatabase();
   await requestResult(db.transaction('cases', 'readwrite').objectStore('cases').put(card));
@@ -75,8 +116,27 @@ export async function importBackup(backup: BridgeBackup, replace: boolean): Prom
     cases.clear();
     reviews.clear();
   }
-  backup.cases.forEach((card) => cases.put(card));
-  backup.reviews.forEach((review) => reviews.put(review));
+  if (replace) {
+    backup.cases.forEach((card) => cases.put(card));
+    backup.reviews.forEach((review) => reviews.put(review));
+  } else {
+    // `add` deliberately preserves local records on primary-key collisions. A
+    // backup is portable, but it must never overwrite work already on a device.
+    const existingCaseIds = new Set(await requestResult(cases.getAllKeys()) as IDBValidKey[]);
+    const acceptedCaseIds = new Set<string>();
+    backup.cases.forEach((card) => {
+      if (!existingCaseIds.has(card.id)) {
+        cases.add(card);
+        acceptedCaseIds.add(card.id);
+      }
+    });
+    const existingReviewIds = new Set(await requestResult(reviews.getAllKeys()) as IDBValidKey[]);
+    backup.reviews.forEach((review) => {
+      // A review from a colliding case must not be attached to a local record
+      // with the same ID: that would silently change the local history's meaning.
+      if (acceptedCaseIds.has(review.caseId) && !existingReviewIds.has(review.id)) reviews.add(review);
+    });
+  }
   await new Promise<void>((resolve, reject) => {
     transaction.oncomplete = () => resolve();
     transaction.onerror = () => reject(transaction.error ?? new Error('The backup could not be saved.'));

@@ -419,7 +419,8 @@ dialog::backdrop { background: rgba(23, 37, 33, .72); }
 
 footer { width: min(1200px, calc(100% - 40px)); margin: 80px auto 0; padding: 28px 0 max(28px, env(safe-area-inset-bottom)); display: flex; justify-content: space-between; gap: 28px; border-top: 2px solid var(--ink); color: var(--ink-soft); font-size: .78rem; }
 footer p { margin: 0; }
-footer nav { display: flex; gap: 20px; }
+footer nav { display: flex; gap: 12px; }
+footer nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 4px; }
 
 .fatal-state { max-width: 680px; margin: 12vh auto; padding: 40px; }
 .fatal-state h2 { font-size: 3rem; }

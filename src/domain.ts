@@ -27,16 +27,76 @@ function isText(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
+function isTimestamp(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0 && Number.isFinite(new Date(value).getTime());
+}
+
+const CASE_TEXT_LIMITS = {
+  id: 180,
+  title: 90,
+  scenario: 900,
+  domainSignal: 360,
+  concept: 100,
+  decision: 600,
+  alternative: 100,
+  whyNotAlternative: 600,
+  attribution: 180
+} as const;
+
+function hasTextWithin(value: unknown, limit: number): value is string {
+  return isText(value) && value.length <= limit;
+}
+
+export function validateCaseCard(card: unknown): asserts card is CaseCard {
+  if (!card || typeof card !== 'object') throw new Error('A case is missing required fields.');
+  const value = card as Partial<CaseCard>;
+  for (const [field, limit] of Object.entries(CASE_TEXT_LIMITS)) {
+    if (!hasTextWithin(value[field as keyof CaseCard], limit)) {
+      throw new Error(`The ${field === 'whyNotAlternative' ? 'why-not alternative' : field} needs meaningful text within its limit.`);
+    }
+  }
+  if (!isTimestamp(value.createdAt) || !isTimestamp(value.updatedAt) || !isTimestamp(value.nextReviewAt)) {
+    throw new Error('A case has an invalid saved date.');
+  }
+  if (!Number.isSafeInteger(value.reviewCount) || (value.reviewCount ?? -1) < 0) {
+    throw new Error('A case has an invalid review count.');
+  }
+}
+
+function validateReviewRecord(review: unknown, casesById: Map<string, CaseCard>): asserts review is ReviewRecord {
+  if (!review || typeof review !== 'object') throw new Error('A review is malformed. Nothing was imported.');
+  const value = review as Partial<ReviewRecord>;
+  if (!hasTextWithin(value.id, 180) || !hasTextWithin(value.caseId, 180) || !hasTextWithin(value.selected, 100) || !isTimestamp(value.reviewedAt) || typeof value.correct !== 'boolean') {
+    throw new Error('A review is malformed. Nothing was imported.');
+  }
+  const card = casesById.get(value.caseId);
+  if (!card || (value.selected !== card.concept && value.selected !== card.alternative)) {
+    throw new Error('A review does not belong to an imported case. Nothing was imported.');
+  }
+}
+
 export function validateBackup(input: unknown): BridgeBackup {
   if (!input || typeof input !== 'object') throw new Error('That file is not a Concept Case Bridge backup.');
   const value = input as Partial<BridgeBackup>;
   if (value.format !== 'concept-case-bridge' || value.version !== 1 || !Array.isArray(value.cases) || !Array.isArray(value.reviews)) {
     throw new Error('That backup format is not supported. Export a fresh JSON backup and try again.');
   }
+  if (!isTimestamp(value.exportedAt)) throw new Error('That backup has an invalid export date. Nothing was imported.');
+  const casesById = new Map<string, CaseCard>();
   for (const card of value.cases) {
-    if (!card || !isText(card.id) || !isText(card.title) || !isText(card.scenario) || !isText(card.domainSignal) || !isText(card.concept) || !isText(card.decision) || !isText(card.alternative) || !isText(card.whyNotAlternative) || !isText(card.attribution)) {
-      throw new Error('One or more cases are incomplete. Nothing was imported.');
+    try {
+      validateCaseCard(card);
+    } catch {
+      throw new Error('One or more cases are incomplete or malformed. Nothing was imported.');
     }
+    if (casesById.has(card.id)) throw new Error('That backup contains duplicate case IDs. Nothing was imported.');
+    casesById.set(card.id, card);
+  }
+  const reviewIds = new Set<string>();
+  for (const review of value.reviews) {
+    validateReviewRecord(review, casesById);
+    if (reviewIds.has(review.id)) throw new Error('That backup contains duplicate review IDs. Nothing was imported.');
+    reviewIds.add(review.id);
   }
   return value as BridgeBackup;
 }

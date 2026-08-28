@@ -28,7 +28,22 @@ describe('portable data', () => {
   });
 
   it('rejects incomplete records without changing data', () => {
-    expect(() => validateBackup({ format: 'concept-case-bridge', version: 1, cases: [{ id: 'bad' }], reviews: [] })).toThrow('incomplete');
+    expect(() => validateBackup({ format: 'concept-case-bridge', version: 1, exportedAt: '2026-08-28T12:00:00.000Z', cases: [{ id: 'bad' }], reviews: [] })).toThrow('incomplete');
+  });
+
+  it('rejects malformed reviews and invalid counters before storage', () => {
+    vi.stubGlobal('crypto', { randomUUID: () => '12345678-abcd' });
+    const card = makeExample(new Date('2026-08-28T12:00:00.000Z'));
+    const malformedReview = { id: 'review_1', caseId: null, reviewedAt: 'not-a-date', selected: {}, correct: 'true' };
+    expect(() => validateBackup({ format: 'concept-case-bridge', version: 1, exportedAt: card.createdAt, cases: [card], reviews: [malformedReview] })).toThrow('review');
+    expect(() => validateBackup({ format: 'concept-case-bridge', version: 1, exportedAt: card.createdAt, cases: [{ ...card, reviewCount: '3' }], reviews: [] })).toThrow('malformed');
+  });
+
+  it('rejects whitespace-only fields and reviews unrelated to their case', () => {
+    vi.stubGlobal('crypto', { randomUUID: () => '12345678-abcd' });
+    const card = makeExample(new Date('2026-08-28T12:00:00.000Z'));
+    expect(() => validateBackup({ format: 'concept-case-bridge', version: 1, exportedAt: card.createdAt, cases: [{ ...card, scenario: '   ' }], reviews: [] })).toThrow('malformed');
+    expect(() => validateBackup({ format: 'concept-case-bridge', version: 1, exportedAt: card.createdAt, cases: [card], reviews: [{ id: 'review_1', caseId: card.id, reviewedAt: card.createdAt, selected: 'Wrong concept', correct: false }] })).toThrow('does not belong');
   });
 
   it('calculates review accuracy', () => {

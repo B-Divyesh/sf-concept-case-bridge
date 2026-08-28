@@ -15,12 +15,19 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
   if (url.origin !== location.origin) return;
+  // License return URLs contain a credential. Never persist that URL or its
+  // response in Cache Storage; the page captures and strips it immediately.
+  if (url.searchParams.has('license')) {
+    event.respondWith(fetch(request));
+    return;
+  }
   if (request.mode === 'navigate') {
+    const canonical = new Request(url.pathname);
     event.respondWith(fetch(request).then((response) => {
       const copy = response.clone();
-      caches.open(CACHE).then((cache) => cache.put(request, copy));
+      caches.open(CACHE).then((cache) => cache.put(canonical, copy));
       return response;
-    }).catch(async () => (await caches.match(request, { ignoreSearch: true, ignoreVary: true })) || (await caches.match('/index.html', { ignoreVary: true })) || caches.match('/offline.html', { ignoreVary: true })));
+    }).catch(async () => (await caches.match(canonical, { ignoreVary: true })) || (await caches.match('/index.html', { ignoreVary: true })) || caches.match('/offline.html', { ignoreVary: true })));
     return;
   }
   event.respondWith(caches.match(request, { ignoreSearch: true, ignoreVary: true }).then((cached) => cached || fetch(request).then((response) => {

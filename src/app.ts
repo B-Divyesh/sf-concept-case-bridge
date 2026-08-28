@@ -1,6 +1,6 @@
 import './style.css';
-import { addReview, getAllCases, getAllReviews, importBackup, removeCase, saveCase } from './db';
-import { accuracy, createId, FREE_CASE_LIMIT, isDue, makeExample, scheduleNextReview, validateBackup } from './domain';
+import { addReview, getAllCases, getAllReviews, importBackup, recoverCasebook, removeCase, saveCase } from './db';
+import { accuracy, createId, FREE_CASE_LIMIT, isDue, makeExample, scheduleNextReview, validateBackup, validateCaseCard } from './domain';
 import { captureReturnedLicense, checkoutUrl, initialLicenseState, storeLicense, verifyLicense } from './license';
 import type { BridgeBackup, CaseCard, LicenseState, ReviewRecord } from './types';
 
@@ -49,7 +49,10 @@ class BridgeApp {
     this.license = initialLicenseState();
     this.bindEvents();
     try {
-      [this.cases, this.reviews] = await Promise.all([getAllCases(), getAllReviews()]);
+      const recovered = await recoverCasebook();
+      this.cases = recovered.cases;
+      this.reviews = recovered.reviews;
+      if (recovered.discarded) this.toast = `Recovered this casebook by removing ${recovered.discarded} malformed ${recovered.discarded === 1 ? 'record' : 'records'} from an older import.`;
       this.render();
       this.registerServiceWorker();
       if (this.license.token) {
@@ -122,11 +125,10 @@ class BridgeApp {
   }
 
   private render(): void {
-    let content = '';
-    if (this.view === 'editor') content = this.editorView();
-    else if (this.view === 'review') content = this.reviewView();
-    else if (this.view === 'license') content = this.licenseView();
-    else content = this.libraryView();
+    const content = this.view === 'editor' ? this.editorView()
+      : this.view === 'review' ? this.reviewView()
+        : this.view === 'license' ? this.licenseView()
+          : this.libraryView();
     appRoot.innerHTML = this.shell(content);
     appRoot.removeAttribute('data-loading');
     document.querySelector('#boot-loader')?.remove();
@@ -241,7 +243,7 @@ class BridgeApp {
   private licenseView(): string {
     return `<section class="work-view license-view" aria-labelledby="license-heading">
       <div class="license-poster"><p class="stamp">One-time unlock</p><h2 id="license-heading">Keep the practice private.<br><em>Remove the ceiling.</em></h2><p class="price"><strong>$19</strong> once</p><ul><li>Unlimited authored case links</li><li>Recent decision-check history</li><li>Future local-only pro improvements</li></ul><p>The free workbench includes 15 cases, delayed reviews, offline use, and complete backup export. Accessibility, privacy, and data ownership are never paywalled.</p>${this.license.unlocked ? '<p class="unlocked-mark"><span aria-hidden="true">✓</span> This device is unlocked.</p>' : `<a class="button primary" href="${checkoutUrl}">Buy the one-time unlock</a>`}${this.license.notice ? `<p class="license-notice" role="status">${html(this.license.notice)} ${this.license.unlocked ? '' : `<a href="${checkoutUrl}">Get a new license</a>`}</p>` : ''}</div>
-      <aside class="restore-panel"><p class="eyebrow">Already purchased?</p><h2>Restore on this device</h2><p>Paste the license token from your receipt. It is stored only in this browser and checked with Sociobot at most once per day.</p><form id="license-form"><label>License token<input name="license" required autocomplete="off" spellcheck="false"></label><button class="button secondary" type="submit">Verify & restore</button><p id="license-error" class="form-error" role="alert"></p></form><small>Sociobot/Dodo is the merchant of record. Refunds are handled there and revoke the license automatically.</small></aside>
+      <section class="restore-panel" aria-labelledby="restore-heading"><p class="eyebrow">Already purchased?</p><h2 id="restore-heading">Restore on this device</h2><p>Paste the license token from your receipt. It is stored only in this browser and checked with Sociobot at most once per day.</p><form id="license-form"><label>License token<input name="license" required autocomplete="off" spellcheck="false"></label><button class="button secondary" type="submit">Verify & restore</button><p id="license-error" class="form-error" role="alert"></p></form><small>Sociobot/Dodo is the merchant of record. Refunds are handled there and revoke the license automatically.</small></section>
     </section>`;
   }
 
@@ -305,9 +307,11 @@ class BridgeApp {
       id: existing?.id ?? createId(), title: text('title'), scenario: text('scenario'), domainSignal: text('domainSignal'), concept: text('concept'), decision: text('decision'), alternative: text('alternative'), whyNotAlternative: text('whyNotAlternative'), attribution: text('attribution'), createdAt: existing?.createdAt ?? now, updatedAt: now, nextReviewAt: existing?.nextReviewAt ?? now, reviewCount: existing?.reviewCount ?? 0
     };
     try {
+      validateCaseCard(card);
       await saveCase(card); await this.refresh(); this.view = 'library'; this.toast = existing ? 'Case updated.' : 'Case saved. It is ready to review.'; this.render(); this.focusMain();
-    } catch {
-      const error = document.querySelector('#form-error'); if (error) error.textContent = 'The case could not be saved. Check browser storage and try again.';
+    } catch (caught) {
+      const error = document.querySelector('#form-error');
+      if (error) error.textContent = caught instanceof Error && caught.message.startsWith('The ') ? caught.message : 'The case could not be saved. Check browser storage and try again.';
     }
   }
 
@@ -356,9 +360,17 @@ class BridgeApp {
   private async readImport(file: File): Promise<void> {
     try {
       this.importCandidate = validateBackup(JSON.parse(await file.text()));
+      const collidingCases = this.importCandidate.cases.filter((card) => this.cases.some((local) => local.id === card.id));
+      const importedNewCases = this.importCandidate.cases.length - collidingCases.length;
+      const mergedCount = this.cases.length + importedNewCases;
+      const replacementCount = this.importCandidate.cases.length;
+      if (!this.license.unlocked && (mergedCount > FREE_CASE_LIMIT || replacementCount > FREE_CASE_LIMIT)) {
+        this.importCandidate = null;
+        throw new Error(`This import can hold up to ${Math.max(mergedCount, replacementCount)} cases. The free casebook holds ${FREE_CASE_LIMIT}; unlock first or import a smaller backup.`);
+      }
       const dialog = document.querySelector<HTMLDialogElement>('#import-dialog');
       const summary = dialog?.querySelector('#import-summary');
-      if (summary) summary.textContent = `${this.importCandidate.cases.length} cases and ${this.importCandidate.reviews.length} reviews are ready.`;
+      if (summary) summary.textContent = `${this.importCandidate.cases.length} cases and ${this.importCandidate.reviews.length} reviews are ready.${collidingCases.length ? ` ${collidingCases.length} case ID ${collidingCases.length === 1 ? 'matches' : 'match'} this device; Merge keeps the local version and skips the imported duplicate and its reviews.` : ''}`;
       dialog?.showModal();
     } catch (error) {
       this.toast = error instanceof Error ? error.message : 'The backup could not be read.'; this.render();
