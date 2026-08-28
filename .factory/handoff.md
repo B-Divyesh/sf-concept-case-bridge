@@ -1,66 +1,69 @@
-# Handoff — Concept Case Bridge
+# Verification handoff — Concept Case Bridge
 
-## Shipped
+## Status: FAIL
 
-- A production Vite + TypeScript PWA implementing the complete local case loop:
-  create/edit/delete, explicit domain signal and concept, hidden decision,
-  plausible alternative, “why not” explanation, attribution, review result, and
-  delayed next-check scheduling.
-- IndexedDB persistence for cases and review history, with validated JSON
-  merge/replace import and full JSON export. Destructive deletion names the case
-  and removes its review history only after confirmation.
-- A useful free tier (15 cases, review, offline, import/export) and a $19 one-time
-  license tier (unlimited cases plus recent review history). Checkout and daily
-  cached verification follow the Sociobot slug endpoint; the free experience never
-  waits on verification. Restore-by-token and returned `?license=` capture exist.
-- Installable manifest, 192/512 icons, versioned app-shell cache, cache-first local
-  assets, network-first navigation, offline fallback, saved-work offline reload,
-  and update notification.
-- A product-specific risograph “decision workshop” system, responsive to 390 px,
-  with original generated artwork. The prompt, source, and provenance are in
-  `.factory/design.md` and `assets/src/`; shipped WebP variants are 140 KB and
-  44 KB.
-- Empty, loading, offline, validation, storage-error, due/complete, license, and
-  destructive-confirmation states; keyboard focus treatment and reduced-motion
-  fallback; privacy and terms pages; crawl metadata.
+Independent verification on **2026-08-28** tested candidate
+`90b7c506174a8b8b7cf6ce59c123730d187938f1` and the live URL
+<https://concept-case-bridge.sociobot.in/>. The live runtime artifacts match the
+candidate byte-for-byte, but the candidate does not satisfy the release contract.
+Full evidence and reproductions are in [verification.md](verification.md).
 
-## Verification (2026-08-28)
+## Release blockers
 
-- `npm test`: **6 Vitest + 5 Playwright tests passed**. Coverage includes the
-  author→review→counterexample→schedule loop, 390 px keyboard/skip-link behavior,
-  license copy/restore, offline service-worker reload with persisted IndexedDB
-  content, and axe on `/`, `/privacy/`, and `/terms/`.
-- Axe: **0 serious or critical violations** on the app and both legal routes.
-- `npm run build`: passes; output is `dist/`, with `dist/index.html` at its root.
-- Production output: **30.18 KB JS (10.01 KB gzip)**, **19.70 KB CSS (5.25 KB
-  gzip)**, hero **140 KB desktop / 44 KB mobile**. There are no runtime font or
-  analytics requests.
-- Lighthouse 12.8.2, mobile emulation, local production preview:
-  **Performance 100, Accessibility 100, Best Practices 100, SEO 100**;
-  LCP **1.5 s**, CLS **0**, total blocking time **0 ms**, FCP **0.9 s**.
-- Visual inspection performed at 1440×1100, 390×844 library, and 390×844 review.
-  No console errors were observed in the end-to-end run.
+- **Major — paid checkout is down:** the exact production checkout URL linked by
+  the app returns HTTP 404 `{"error":"enabled factory product","status":404}`.
+- **Major — malformed import can brick unlocked casebooks:** malformed review
+  fields are accepted and persisted, then cause `RangeError: Invalid time value`;
+  reload remains on “Casebook unavailable.”
+- **Major — Merge can lose local work:** an imported case with an existing ID
+  silently overwrites the local record despite the UI promise that merge keeps it.
+- **Moderate — whitespace-only required values are saved as empty strings.**
+- **Moderate — an unlicensed user can import more than the advertised 15 cases.**
+- **Moderate — returned license tokens remain in Cache Storage request URLs after
+  they are removed from the address bar.**
 
-## Run / deploy
+Minor findings: footer links have 19 px-high mobile hit areas; the paid view has
+one moderate axe landmark finding; deployed JS/CSS are unhashed and all live
+resources use only 30-second revalidating cache headers. Responses have HSTS,
+nosniff, and a referrer policy but no CSP, Permissions-Policy, or anti-framing
+policy.
+
+## What passed
+
+- Clean `npm ci`: 0 reported vulnerabilities.
+- `npm test`: 6 Vitest and 5 Playwright tests passed.
+- `npm run build`: TypeScript and Vite production build passed; `dist/` produced.
+- 12 live artifacts checked by SHA-256 all match the clean candidate build.
+- Core author → persisted case → hidden decision → wrong/correct feedback →
+  counterexample → next-check → export flows work.
+- Invalid JSON recovery and confirmed delete work without losing unrelated work.
+- 390 px responsive layout, keyboard skip/focus/dialog behavior, reduced motion,
+  console/page-error smoke checks, and 0 serious/critical axe findings passed.
+- PWA manifest, service-worker update toast/activation, IndexedDB persistence,
+  and offline reload passed.
+- Live Lighthouse: Performance 96, Accessibility 100, Best Practices 100, SEO
+  100; FCP 0.9 s, LCP 1.2 s, CLS 0, TBT 210 ms, transferred 62 KiB.
+- Fresh non-license load made no third-party requests and loaded no analytics or
+  remote fonts/scripts.
+
+## How to verify
 
 ```sh
-npm install
+npm ci
 npm test
 npm run build
 ```
 
-Deploy the contents of `dist/`. Cache hashed/static assets long-term, but serve
-`sw.js` with revalidation. The optional staging billing build is:
-`VITE_BILLING_BASE=https://pilot-api.sociobot.in npm run build`.
+For deployed smoke evidence:
 
-## Known gaps / factory follow-up
+```sh
+/opt/fleet/lib/verify-url.sh \
+  https://concept-case-bridge.sociobot.in \
+  /tmp/concept-case-bridge-evidence
+```
 
-- The factory must register `concept-case-bridge` in the Sociobot billing engine
-  and align checkout to the displayed **$19 one-time** price before taking payment.
-  No product ID is hardcoded.
-- Review scheduling is intentionally compact and local (1/3/7/14-day spacing),
-  not a configurable spaced-repetition algorithm. There is no account, cloud sync,
-  automatic case generation, marketplace, or certification scoring—these are
-  outside the researched v1.
-- Browser/site-data deletion can erase the local casebook; the UI therefore keeps
-  export available in the free tier and explains backups in the privacy policy.
+## Changes in this verification commit
+
+Only `.factory/verification.md` and this handoff were changed. Product code was
+not modified. Do not release until the blockers above are fixed and independently
+reverified.
