@@ -1,0 +1,79 @@
+[
+  {
+    "id": "demo-isolation",
+    "claim": "The one-click demo uses sample data without reading or changing the real casebook.",
+    "where": "landing sample action, demo banner, privacy, README",
+    "test": "npm run test:claims -- --grep @claim:demo-isolation",
+    "sandbox": "fresh browser context; seed real IndexedDB, enter /demo, change and reset sample data, then return to real data"
+  },
+  {
+    "id": "core-review",
+    "claim": "A review hides the decision until the learner chooses, then shows the decision and why the alternative does not fit.",
+    "where": "landing How it works, README",
+    "test": "npm run test:claims -- --grep @claim:core-review",
+    "sandbox": "fresh /demo sample; open inventory case, choose the alternative, reveal, and record the review"
+  },
+  {
+    "id": "local-storage",
+    "claim": "Cases and reviews stay in this browser and persist across reloads.",
+    "where": "landing facts, privacy, README",
+    "test": "npm run test:claims -- --grep @claim:local-storage",
+    "sandbox": "fresh /demo sample; author a uniquely named case, reload, and inspect the demo IndexedDB database"
+  },
+  {
+    "id": "json-export",
+    "claim": "JSON export includes complete cases, attribution, and review history.",
+    "where": "backup tools, README",
+    "test": "npm run test:claims -- --grep @claim:json-export",
+    "sandbox": "fresh /demo sample; download a backup and parse every required case and review field"
+  },
+  {
+    "id": "validated-import",
+    "claim": "Import checks a backup before changing the casebook.",
+    "where": "backup tools, README",
+    "test": "npm run test:claims -- --grep @claim:validated-import",
+    "sandbox": "fresh /demo sample; import a malformed review, reload, and compare the original sample titles"
+  },
+  {
+    "id": "pwa-install",
+    "claim": "The product is installable as a PWA after an online visit.",
+    "where": "README",
+    "test": "npm run test:claims -- --grep @claim:pwa-install",
+    "sandbox": "fresh /demo sample; ask Chromium for the parsed manifest, load declared icons, and confirm an active service worker"
+  },
+  {
+    "id": "offline-reload",
+    "claim": "The app and saved cases reopen offline after the first online visit.",
+    "where": "landing facts, pricing, README",
+    "test": "npm run test:claims -- --grep @claim:offline-reload",
+    "sandbox": "dedicated fresh browser context; load /demo online, wait for service worker control, go offline, and reload"
+  },
+  {
+    "id": "free-case-limit",
+    "claim": "The free version stores up to 15 cases.",
+    "where": "landing facts, pricing, terms, README",
+    "test": "npm run test:claims -- --grep @claim:free-case-limit",
+    "sandbox": "fresh /demo sample without a license; try to replace it with a valid 16-case backup and confirm rejection"
+  },
+  {
+    "id": "paid-unlimited",
+    "claim": "A verified $19 one-time license removes the 15-case limit and shows recent review history.",
+    "where": "landing pricing, license view, terms, README",
+    "test": "npm run test:claims -- --grep @claim:paid-unlimited",
+    "sandbox": "fresh /demo sample; use a recorded valid verification response, import 16 cases, and open recent history"
+  },
+  {
+    "id": "no-tracking-cdn",
+    "claim": "Normal use loads no analytics, advertising trackers, third-party fonts, or CDN scripts.",
+    "where": "privacy, README",
+    "test": "npm run test:claims -- --grep @claim:no-tracking-cdn",
+    "sandbox": "fresh /demo sample; record every request while opening and completing a sample review"
+  },
+  {
+    "id": "no-case-upload",
+    "claim": "Authoring a case does not upload its content.",
+    "where": "privacy, README",
+    "test": "npm run test:claims -- --grep @claim:no-case-upload",
+    "sandbox": "fresh /demo sample; record request methods and bodies while authoring a uniquely marked case"
+  }
+]

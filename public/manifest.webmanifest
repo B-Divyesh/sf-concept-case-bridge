@@ -3,7 +3,7 @@
   "short_name": "Case Bridge",
   "description": "Practice choosing technical concepts in realistic business cases.",
   "id": "/",
-  "start_url": "/?v=1",
+  "start_url": "/?v=1.1.0",
   "scope": "/",
   "display": "standalone",
   "background_color": "#F4EBD8",

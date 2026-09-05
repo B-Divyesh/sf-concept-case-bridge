@@ -1,8 +1,9 @@
 import type { LicenseState } from './types';
 
 const SLUG = 'concept-case-bridge';
-const TOKEN_KEY = `sb_license:${SLUG}`;
-const VERDICT_KEY = `sb_license_verdict:${SLUG}`;
+const DEMO_LICENSE = location.pathname.replace(/\/$/, '') === '/demo' || new URL(location.href).searchParams.get('demo') === '1';
+const TOKEN_KEY = `${DEMO_LICENSE ? 'demo:' : ''}sb_license:${SLUG}`;
+const VERDICT_KEY = `${DEMO_LICENSE ? 'demo:' : ''}sb_license_verdict:${SLUG}`;
 const BILLING_BASE = (import.meta.env.VITE_BILLING_BASE as string | undefined) ?? 'https://api.sociobot.in';
 const DAY = 86_400_000;
 
@@ -42,6 +43,11 @@ export function initialLicenseState(): LicenseState {
 export function storeLicense(token: string): void {
   localStorage.setItem(TOKEN_KEY, token.trim());
   localStorage.removeItem(VERDICT_KEY);
+}
+
+export function clearDemoLicenseData(): void {
+  localStorage.removeItem(`demo:sb_license:${SLUG}`);
+  localStorage.removeItem(`demo:sb_license_verdict:${SLUG}`);
 }
 
 export async function verifyLicense(force = false): Promise<LicenseState> {

@@ -13,8 +13,8 @@ async function chooseBackup(page: import('@playwright/test').Page, backup: unkno
   await page.locator('#import-file').setInputFiles({ name: 'casebook.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(backup)) });
 }
 
-test('has no serious accessibility violations on the main and legal pages', async ({ page }) => {
-  for (const path of ['/', '/privacy/', '/terms/']) {
+test('has no serious accessibility violations on the main, demo, legal, and not-found pages', async ({ page }) => {
+  for (const path of ['/', '/demo', '/privacy/', '/terms/', '/404.html']) {
     await page.goto(path);
     const results = await new AxeBuilder({ page }).analyze();
     const blocking = results.violations.filter((violation) => ['serious', 'critical'].includes(violation.impact ?? ''));
@@ -45,14 +45,14 @@ test('authors and reviews a concept-case link end to end', async ({ page }) => {
   await expect(page.getByText('Intended concept chosen')).toBeVisible();
   await expect(page.getByText(/retry can arrive after the debounce window/i)).toBeVisible();
   await page.getByRole('button', { name: 'Record & next' }).click();
-  await expect(page.getByText('Nothing is due right now.')).toBeVisible();
+  await expect(page.getByText('Nothing is due right now')).toBeVisible();
   expect(consoleErrors).toEqual([]);
 });
 
 test('supports a 390px empty state and keyboard entry', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: /Start with one decision/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Practice technical choices in business cases' })).toBeVisible();
   await page.keyboard.press('Tab');
   await expect(page.getByRole('link', { name: 'Skip to main content' })).toBeFocused();
   await page.keyboard.press('Enter');
@@ -61,8 +61,7 @@ test('supports a 390px empty state and keyboard entry', async ({ page }) => {
 });
 
 test('reopens saved cases while offline', async ({ page, context }) => {
-  await page.goto('/');
-  await page.getByRole('button', { name: 'Add a generic example' }).click();
+  await page.goto('/demo');
   await expect(page.getByRole('heading', { name: 'Inventory updates arrive twice' })).toBeVisible();
   await page.evaluate(async () => { await navigator.serviceWorker.ready; });
   await page.reload();
@@ -75,9 +74,9 @@ test('reopens saved cases while offline', async ({ page, context }) => {
 
 test('shows transparent paid terms and restore path', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Get unlimited' }).click();
+  await page.getByRole('button', { name: 'Pricing' }).click();
   await expect(page.getByText('$19')).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Buy the one-time unlock' })).toHaveAttribute('href', 'https://api.sociobot.in/api/v1/products/concept-case-bridge/checkout');
+  await expect(page.getByRole('link', { name: 'Buy the one-time license' })).toHaveAttribute('href', 'https://api.sociobot.in/api/v1/products/concept-case-bridge/checkout');
   await expect(page.getByLabel('License token')).toBeVisible();
 });
 
@@ -100,7 +99,7 @@ test('rejects malformed imports before persistence and keeps the casebook usable
   await expect(page.getByText('A review is malformed. Nothing was imported.')).toBeVisible();
   await page.reload();
   await expect(page.getByText('Casebook unavailable')).toHaveCount(0);
-  await expect(page.getByRole('heading', { name: /Start with one decision/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Practice technical choices in business cases' })).toBeVisible();
 });
 
 test('recovers a legacy malformed review without asking the user to clear their casebook', async ({ page }) => {
@@ -141,7 +140,7 @@ test('enforces the free 15-case ceiling during import', async ({ page }) => {
   const cases = Array.from({ length: 16 }, (_, index) => backupCase(`case_${index}`, `Imported case ${index + 1}`));
   await page.goto('/');
   await chooseBackup(page, { format: 'concept-case-bridge', version: 1, exportedAt: cases[0].createdAt, cases, reviews: [] });
-  await expect(page.getByText(/free casebook holds 15/i)).toBeVisible();
+  await expect(page.getByText(/free version stores 15/i)).toBeVisible();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
 
@@ -163,7 +162,33 @@ test('keeps footer links touch-sized and avoids a nested complementary landmark'
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
   for (const link of await page.locator('footer nav a').all()) expect((await link.boundingBox())?.height).toBeGreaterThanOrEqual(44);
-  await page.getByRole('button', { name: 'Get unlimited' }).click();
+  await page.getByRole('button', { name: 'Pricing' }).click();
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations.find((violation) => violation.id === 'landmark-complementary-is-top-level')).toBeUndefined();
+});
+
+test('renders the designed missing-page document with a way home', async ({ page }) => {
+  const response = await page.goto('/404.html');
+  expect(response?.status()).toBe(200);
+  await expect(page).toHaveTitle('Page not found — Concept Case Bridge');
+  await expect(page.locator('h1')).toHaveText('This page does not exist');
+  await expect(page.locator('h1')).toHaveCount(1);
+  await expect(page.getByRole('link', { name: 'Return to your casebook' })).toHaveAttribute('href', '/');
+});
+
+test('keeps application routes, titles, reload, back navigation, and focus in sync', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Review' }).click();
+  await expect(page).toHaveURL(/\/review$/);
+  await expect(page).toHaveTitle('Review cases — Concept Case Bridge');
+  await expect(page.locator('h1')).toHaveText('No cases to review yet');
+  await expect(page.locator('h1')).toBeFocused();
+  await page.reload();
+  await expect(page.locator('h1')).toHaveText('No cases to review yet');
+  await page.getByRole('button', { name: /Cases/ }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await page.goBack();
+  await expect(page).toHaveURL(/\/review$/);
+  await expect(page.locator('h1')).toHaveText('No cases to review yet');
+  await expect(page.locator('h1')).toBeFocused();
 });

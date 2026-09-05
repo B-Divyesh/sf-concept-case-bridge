@@ -102,3 +102,13 @@ Small icons, registration marks, and paper textures are hand-authored CSS/SVG.
 All shipped raster variants must be WebP (plus AVIF when tool support permits),
 carry explicit dimensions, and stay below 300 KB. Generated imagery is disclosed
 in the footer.
+
+The social preview is a 1200×630 center crop of the original generated
+`bridge-workbench.webp`; no new visual content was introduced. The 180 px Apple
+touch icon is a resized copy of the hand-authored product icon. Both derivatives
+were made on 2026-09-05 and inherit the source asset provenance above.
+
+The demo state uses the same mustard decision paper as the reveal strip. Its
+persistent banner stays square-edged and ink-bordered, so sample mode is obvious
+without adding a generic alert treatment. Reset and exit controls use the same
+press-and-offset interaction as authoring controls.

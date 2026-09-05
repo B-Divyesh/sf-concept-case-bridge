@@ -1,12 +1,22 @@
 import type { BridgeBackup, CaseCard, ReviewRecord } from './types';
 import { validateBackup, validateCaseCard } from './domain';
 
-const DB_NAME = 'concept-case-bridge';
+const REAL_DB_NAME = 'concept-case-bridge';
+export const DEMO_DB_NAME = 'demo:concept-case-bridge';
 const DB_VERSION = 1;
+
+export function isDemoMode(): boolean {
+  const url = new URL(location.href);
+  return url.pathname.replace(/\/$/, '') === '/demo' || url.searchParams.get('demo') === '1';
+}
+
+function databaseName(): string {
+  return isDemoMode() ? DEMO_DB_NAME : REAL_DB_NAME;
+}
 
 function openDatabase(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    const request = indexedDB.open(databaseName(), DB_VERSION);
     request.onupgradeneeded = () => {
       const db = request.result;
       if (!db.objectStoreNames.contains('cases')) db.createObjectStore('cases', { keyPath: 'id' });
@@ -17,6 +27,15 @@ function openDatabase(): Promise<IDBDatabase> {
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(new Error('Your browser could not open the local casebook. Check private-browsing storage settings and reload.'));
+  });
+}
+
+export function discardDemoCasebook(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.deleteDatabase(DEMO_DB_NAME);
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error ?? new Error('The sample data could not be cleared.'));
+    request.onblocked = () => reject(new Error('Close other demo tabs, then reset the sample data again.'));
   });
 }
 

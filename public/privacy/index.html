@@ -1,5 +1,47 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#F4EBD8"><meta name="description" content="Privacy policy for Concept Case Bridge."><link rel="stylesheet" href="/legal.css"><link rel="icon" href="/icons/icon.svg" type="image/svg+xml"><title>Privacy — Concept Case Bridge</title></head>
-<body><a class="skip" href="#main">Skip to main content</a><header><a href="/">← Concept Case Bridge</a></header><main id="main"><p class="eyebrow">Effective August 28, 2026</p><h1>Privacy stays on <em>your side.</em></h1><div class="notice"><strong>Plain-language summary:</strong> case content and review history remain in your browser. We do not run analytics or advertising trackers.</div><h2>What the app stores</h2><p>Your authored cases and review history are stored in IndexedDB on this device. A purchase license and its cached verification result are stored in localStorage. The app does not upload case content.</p><h2>What leaves your device</h2><p>If you buy or restore the one-time unlock, your browser connects to the Sociobot billing API to open hosted checkout or verify the license token. The verification request contains the token, not your cases. Sociobot/Dodo acts as merchant of record and handles payment information under its own notices.</p><h2>Backups and deletion</h2><p>Exported JSON backups go only to the download location you choose. Deleting a case also deletes its local review records. To erase everything, clear site data for this origin in your browser. Uninstalling the PWA may not clear browser storage on every platform.</p><h2>Offline cache</h2><p>The service worker caches the application shell and original generated illustration so the app opens offline. It contains no authored case data.</p><h2>Contact</h2><p>For privacy questions, contact <a href="mailto:privacy@sociobot.in">privacy@sociobot.in</a>. Please do not email confidential case content.</p></main><footer>Concept Case Bridge · Local-first decision practice · <a href="/terms/">Terms</a></footer></body>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#F4EBD8">
+  <meta name="description" content="How Concept Case Bridge stores cases, reviews, backups, and license details.">
+  <link rel="canonical" href="https://concept-case-bridge.sociobot.in/privacy/">
+  <link rel="stylesheet" href="/legal.css">
+  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <meta property="og:title" content="Privacy — Concept Case Bridge">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://concept-case-bridge.sociobot.in/privacy/">
+  <meta property="og:description" content="How Concept Case Bridge stores cases, reviews, backups, and license details.">
+  <meta property="og:image" content="https://concept-case-bridge.sociobot.in/assets/social-preview.webp">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Privacy — Concept Case Bridge">
+  <meta name="twitter:description" content="How Concept Case Bridge stores cases, reviews, backups, and license details.">
+  <meta name="twitter:image" content="https://concept-case-bridge.sociobot.in/assets/social-preview.webp">
+  <title>Privacy — Concept Case Bridge</title>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to main content</a>
+  <header class="legal-header"><a class="legal-wordmark" href="/">Concept Case Bridge</a><nav aria-label="Primary"><a href="/demo">Demo</a><a href="/privacy/" aria-current="page">Privacy</a><a href="/terms/">Terms</a></nav></header>
+  <main id="main">
+    <p class="eyebrow">Effective September 5, 2026</p>
+    <h1>How Concept Case Bridge handles your data</h1>
+    <div class="notice"><strong>Summary:</strong> case content and review history remain in your browser. We do not run analytics or advertising trackers.</div>
+    <h2>What the app stores</h2>
+    <p>Your cases and review history are stored in IndexedDB on this device. A license and its cached result use localStorage.</p>
+    <p>Demo cases use a separate IndexedDB database named <code>demo:concept-case-bridge</code>. Demo controls never read or change your real casebook.</p>
+    <h2>What leaves your device</h2>
+    <p>The app does not upload case content. It does not load analytics, advertising trackers, third-party fonts, or CDN scripts.</p>
+    <p>Buying or restoring a license connects to the Sociobot billing API. The verification request contains the license token, not your cases.</p>
+    <p>Sociobot/Dodo is the merchant of record and handles payment information under its own notices.</p>
+    <h2>Backups and deletion</h2>
+    <p>Exported JSON backups go to the download location you choose. Deleting a case also deletes its local reviews.</p>
+    <p>Clear this site’s browser data to erase everything. Uninstalling the PWA may not clear browser storage on every platform.</p>
+    <h2>Offline cache</h2>
+    <p>The service worker caches app files and the original illustration. It does not store authored cases.</p>
+    <h2>Contact</h2>
+    <p>Email <a href="mailto:privacy@sociobot.in">privacy@sociobot.in</a> with privacy questions. Do not email confidential case content.</p>
+  </main>
+  <footer><span>Practice technical choices in business cases. v1.1.0 · Built by Param Factory.</span><nav aria-label="Legal"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a></nav></footer>
+</body>
 </html>

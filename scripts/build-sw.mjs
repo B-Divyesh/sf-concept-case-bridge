@@ -5,7 +5,25 @@ const manifest = JSON.parse(await readFile('dist/.vite/manifest.json', 'utf8'));
 const entry = Object.values(manifest).find((item) => item.isEntry);
 if (!entry) throw new Error('Vite manifest has no application entry.');
 
-const assets = new Set(['/', '/index.html', '/offline.html', '/manifest.webmanifest', '/assets/bridge-workbench.webp', '/assets/bridge-workbench-720.webp', '/icons/icon-192.png', '/icons/icon-512.png']);
+const assets = new Set([
+  '/',
+  '/demo',
+  '/write',
+  '/review',
+  '/pricing',
+  '/index.html',
+  '/404.html',
+  '/offline.html',
+  '/privacy/',
+  '/terms/',
+  '/legal.css',
+  '/manifest.webmanifest',
+  '/assets/bridge-workbench.webp',
+  '/assets/bridge-workbench-720.webp',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
+  '/icons/apple-touch-icon.png'
+]);
 for (const item of Object.values(manifest)) {
   assets.add(`/${item.file}`);
   for (const css of item.css ?? []) assets.add(`/${css}`);

@@ -1,80 +1,88 @@
 # Concept Case Bridge
 
-Concept Case Bridge is a private, offline-capable case-card workbench for
-professionals learning a technical stack and an unfamiliar business domain at
-the same time. Its atomic unit is not a fact: it is a domain signal, a technical
-choice, a decision, and a reason the closest alternative does not fit.
+Concept Case Bridge helps professionals practice technical choices in realistic
+business cases. Write a scenario, name its domain signal, hide the decision, and
+compare the intended concept with a plausible alternative.
 
 Live product: <https://concept-case-bridge.sociobot.in>
 
-## What it does
+Try the isolated sample: <https://concept-case-bridge.sociobot.in/demo>
 
-- Authors compact cases with explicit concept, signal, decision, counterexample,
-  and attribution fields.
-- Hides the decision during review and schedules the next local check according
-  to the result.
-- Stores cases and review records in IndexedDB—there is no account or cloud sync.
-- Exports and validates complete JSON backups; imports can merge or replace only
-  after explicit confirmation.
-- Installs as a PWA and reopens saved work offline.
-- Provides 15 cases free. A $19 one-time Sociobot license enables unlimited cases
-  and the recent review-history view. Review, accessibility, and export stay free.
+## Who it is for
 
-The included example is deliberately generic. Do not put employer-confidential,
-personal, or regulated facts into cases.
+It is for professionals learning a technical stack and an unfamiliar business
+domain at the same time. The product focuses on transfer decisions, not fact
+recall or generated lessons.
+
+## Verified behavior
+
+- Cases and review records stay in IndexedDB and persist across reloads.
+- The demo uses `demo:concept-case-bridge`, separate from the real casebook.
+- Reviews hide the decision until a choice is made.
+- JSON export includes cases, attribution, and review history.
+- Import checks every case and review before changing stored data.
+- The PWA reopens saved cases offline after one online visit.
+- The free version accepts up to 15 cases.
+- A verified $19 one-time license enables unlimited cases and recent history.
+- Normal use loads no analytics, trackers, third-party fonts, or CDN scripts.
+- Authoring a case does not upload its content.
+
+Each statement above has one browser test in [`.factory/claims.json`](.factory/claims.json).
+The sample contains three generic business cases. Do not put confidential,
+personal, or regulated facts into a case.
 
 ## Run locally
 
-Requirements: Node.js 20+ and npm.
+Requirements: Node.js 20 or later and npm.
 
 ```sh
 npm ci
 npm run dev
 ```
 
-Vite prints the local URL. No environment variables are required for the free
-experience.
+Vite prints the local URL. The free product needs no environment variables.
 
 ## Test and build
 
 ```sh
-npm test
 npm run lint
+npm test
 npm run build
 npm run preview
 ```
 
-`npm test` runs Vitest domain tests and Playwright Chromium flows, including a
-service-worker offline reload and serious/critical axe scan. The exact production
-build command is `npm run build`; it writes the static deploy to `dist/`, with
-`dist/index.html` at its root.
+Run all public-claim checks with:
 
-Playwright is pinned to 1.58.2. In an environment without its browser bundle, run
+```sh
+npm run test:claims
+```
+
+`npm test` runs unit and Chromium browser checks, including claims,
+accessibility, keyboard use, mobile layout, and offline reload. `npm run build`
+writes the static product to `dist/`.
+
+Playwright is pinned to 1.58.2. If its browser bundle is absent, run
 `npx playwright install chromium` once.
 
-## Billing configuration
+## Billing
 
-The default hosted checkout and verify endpoint is the production Sociobot API.
-For a registered staging product, build with:
+The hosted checkout and license check use the Sociobot billing API. A staging
+build can select its registered test product with:
 
 ```sh
 VITE_BILLING_BASE=https://pilot-api.sociobot.in npm run build
 ```
 
-No product ID or payment-provider code is embedded. The slug-based product must be
-registered by the factory, and the checkout price should match the displayed $19
-one-time price.
+The product does not include payment-provider code or credentials.
 
 ## Data and deployment
 
-The site makes no analytics or font/CDN requests. The only optional third-party
-runtime request is license checkout/verification initiated by a purchaser. Static
-files in `dist/` can be deployed as-is. The included Azure Static Web Apps
-configuration assigns immutable caching to hashed assets and no-cache revalidation
-to `sw.js` so PWA updates are discovered promptly.
+Deploy the files in `dist/` as one static site. The included Static Web Apps
+configuration keeps hashed assets immutable, makes the service worker
+revalidate, and serves the designed 404 document with HTTP 404.
 
-See [the visual thesis](.factory/design.md), [privacy policy](public/privacy/index.html),
-and [terms](public/terms/index.html).
+See [the demo contract](.factory/demo.md), [visual thesis](.factory/design.md),
+[privacy policy](public/privacy/index.html), and [terms](public/terms/index.html).
 
 ## License
 

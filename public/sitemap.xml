@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://concept-case-bridge.sociobot.in/</loc></url>
+  <url><loc>https://concept-case-bridge.sociobot.in/demo</loc></url>
+  <url><loc>https://concept-case-bridge.sociobot.in/write</loc></url>
+  <url><loc>https://concept-case-bridge.sociobot.in/review</loc></url>
+  <url><loc>https://concept-case-bridge.sociobot.in/pricing</loc></url>
   <url><loc>https://concept-case-bridge.sociobot.in/privacy/</loc></url>
   <url><loc>https://concept-case-bridge.sociobot.in/terms/</loc></url>
 </urlset>

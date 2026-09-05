@@ -119,3 +119,56 @@ export function makeExample(now = new Date()): CaseCard {
     reviewCount: 0
   };
 }
+
+export function makeDemoBackup(now = new Date()): BridgeBackup {
+  const timestamp = now.toISOString();
+  const yesterday = new Date(now.getTime() - 86_400_000).toISOString();
+  const nextWeek = new Date(now.getTime() + 7 * 86_400_000).toISOString();
+  const cases: CaseCard[] = [
+    {
+      ...makeExample(now),
+      id: 'demo_inventory_retry',
+      createdAt: yesterday,
+      updatedAt: yesterday,
+      nextReviewAt: timestamp
+    },
+    {
+      id: 'demo_claim_revision',
+      title: 'A claim estimate changes during approval',
+      scenario: 'An adjuster opens a claim at the same time that a repair shop submits a revised estimate. Approving the stale amount would create the wrong payment.',
+      domainSignal: 'Two people can edit one claim, and the approval must use the version the adjuster actually reviewed.',
+      concept: 'Optimistic concurrency control',
+      decision: 'Store a version with the claim and reject approval when that version changed after the adjuster opened it.',
+      alternative: 'Last write wins',
+      whyNotAlternative: 'Last write wins hides the conflict. It can replace the revised estimate with an approval based on older facts.',
+      attribution: 'Generic insurance example authored by Concept Case Bridge; contains no employer data.',
+      createdAt: yesterday,
+      updatedAt: timestamp,
+      nextReviewAt: timestamp,
+      reviewCount: 0
+    },
+    {
+      id: 'demo_billing_cancel',
+      title: 'Cancellation overlaps the billing run',
+      scenario: 'A customer cancels while a nightly billing job is preparing renewal charges. The account and payment message must agree even if delivery pauses.',
+      domainSignal: 'The database change and the message cannot be committed atomically by two separate systems.',
+      concept: 'Transactional outbox',
+      decision: 'Write the cancellation and an event to one database transaction, then deliver the event from the outbox.',
+      alternative: 'Publish then update',
+      whyNotAlternative: 'A crash between publishing and updating can charge a cancelled account or leave systems with conflicting states.',
+      attribution: 'Generic subscription example authored by Concept Case Bridge; contains no customer data.',
+      createdAt: yesterday,
+      updatedAt: timestamp,
+      nextReviewAt: nextWeek,
+      reviewCount: 1
+    }
+  ];
+  const reviews: ReviewRecord[] = [{
+    id: 'demo_review_billing',
+    caseId: 'demo_billing_cancel',
+    reviewedAt: yesterday,
+    selected: 'Transactional outbox',
+    correct: true
+  }];
+  return { format: 'concept-case-bridge', version: 1, exportedAt: timestamp, cases, reviews };
+}
