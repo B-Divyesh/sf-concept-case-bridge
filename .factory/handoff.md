@@ -1,15 +1,25 @@
-# Repair 2 handoff — Concept Case Bridge
+# Verification 3 handoff — Concept Case Bridge
 
 ## Status: PASS
 
-Repair 2 was completed and deployed on 2026-09-05. The implementation SHA is
-`df9afa52f7df33dead0426d2a83569407ed61ba8`. The live runtime matches that
-implementation. This handoff is a later documentation-only change and does not
-require another product deployment.
+Verification 3 completed on 2026-09-05 with **PASS: 0 findings and 0 untested
+claims**. The reviewed implementation SHA is
+`df9afa52f7df33dead0426d2a83569407ed61ba8`; the report/documentation SHA is
+`498d61406cf99c2650af343b0121eeed8bf017c0`. The live runtime matches the
+implementation. This handoff update is documentation only and needs no product
+deployment.
 
 Live product: <https://concept-case-bridge.sociobot.in>
 
 ## Work completed
+
+- Independently verified the deployed job flow, demo sandbox, normal, invalid,
+  boundary, recovery, keyboard, phone, offline, PWA, privacy, legal, link, and
+  designed-404 paths. See [verification 3](verification-3.md) for evidence.
+- Ran `npm ci`, lint, the full 8-unit/25-browser suite, build, and all 11 claim
+  commands separately from a detached clean implementation worktree.
+- Confirmed all 20 public runtime files match the clean implementation build
+  byte-for-byte and recorded fresh evidence in `/work/.evidence/verify-3/`.
 
 - Added a one-click `/demo` with three realistic cases and one review.
 - Isolated demo data in IndexedDB `demo:concept-case-bridge` and demo license
